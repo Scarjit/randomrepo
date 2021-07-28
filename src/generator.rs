@@ -73,12 +73,12 @@ impl Graph{
         }
     }
 
-    pub async fn dump_sql_simple(self: Graph, filename: &Path){
+    pub async fn dump_sql_simple(self: &Graph, filename: &Path){
         let mut f = File::create(filename).await.unwrap();
 
         let mut sql = String::from("INSERT INTO simple_table (parent, child) VALUES\n");
 
-        for edge in self.edges {
+        for edge in &self.edges {
             sql += &format!("\t({}, {}),\n", edge.0, edge.1);
         }
         sql.remove(sql.len()-1);
@@ -86,6 +86,31 @@ impl Graph{
         sql += ";";
 
         f.write_all(sql.as_bytes()).await.unwrap();
+    }
+
+    pub async fn dump_sql_split_v1(self: &Graph, filename_cop: &Path, filename_poc: &Path){
+
+        let mut f_cop = File::create(filename_cop).await.unwrap();
+        let mut f_poc = File::create(filename_poc).await.unwrap();
+
+        let mut sql_cop = String::from("INSERT INTO ChildOfParent (parent, child) VALUES\n");
+        let mut sql_poc = String::from("INSERT INTO ParentOfChild (child, parent) VALUES\n");
+
+        for edge in &self.edges {
+            sql_cop += &format!("\t({}, {}),\n", edge.0, edge.1);
+            sql_poc += &format!("\t({}, {}),\n", edge.0, edge.1);
+        }
+        sql_cop.remove(sql_cop.len()-1);
+        sql_cop.remove(sql_cop.len()-1);
+        sql_cop += ";";
+
+
+        sql_poc.remove(sql_cop.len()-1);
+        sql_poc.remove(sql_cop.len()-1);
+        sql_poc += ";";
+
+        f_cop.write_all(sql_cop.as_bytes()).await.unwrap();
+        f_poc.write_all(sql_poc.as_bytes()).await.unwrap();
     }
 
 }
