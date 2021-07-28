@@ -7,9 +7,10 @@ mod tests {
     use std::path::Path;
     use std::fs;
     use tokio_postgres::{NoTls, Client};
-    use std::borrow::Cow;
     use crate::edge::Edges;
     use std::fs::File;
+    use std::time::Instant;
+
 
     const SIMPLE_PATH: &str = concat!("C:/Users/ferdi/CLionProjects/randomrepo", "/sql/simple/");
     const V1_COP_PATH: &str =concat!("C:/Users/ferdi/CLionProjects/randomrepo", "/sql/v1/cop/");
@@ -86,9 +87,15 @@ mod tests {
         client
     }
 
-
     #[tokio::test]
-    async fn get_childen_of_zero_simple() {
+    async fn get_childen_of_starter(){
+        for i in 0..5 {
+            get_childen_of_x(i).await;
+        }
+    }
+
+    async fn get_childen_of_x(x: i32) {
+        let start = Instant::now();
         let client = get_conn().await;
         let sql = r"WITH RECURSIVE childen AS (
     SELECT
@@ -109,13 +116,15 @@ mod tests {
 SELECT *
 FROM childen";
 
-        let response = client.query(sql, &[&0]).await.unwrap();
+        let response = client.query(sql, &[&x]).await.unwrap();
         println!("nRow: {}", response.len());
-        let mut rows = response.iter().map(|r|{
+
+        let rows = response.iter().map(|r|{
             (r.get::<usize, i32>(0) as usize,r.get::<usize, i32>(1) as usize)
         }).collect::<Vec<(usize, usize)>>();
 
-        let mut f = File::create("simple.dot").unwrap();
+        println!("Queried in {:?}", start.elapsed());
+        let mut f = File::create(format!("simple_{}.dot", x)).unwrap();
         dot::render(&Edges(rows), &mut f).unwrap();
     }
 
