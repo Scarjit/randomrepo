@@ -35,5 +35,5 @@ futures = "0.3.16"
 dot = "0.1.4"
 
 [dependencies.tokio]
-version="1.9.0"
+version="1.13.1"
 features = ["full"]
